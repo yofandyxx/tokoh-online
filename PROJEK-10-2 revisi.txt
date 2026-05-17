@@ -1,0 +1,3480 @@
+
+
+61 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+3. PROGRAM CRUD BANK:
+(a). Buat File index.blade.php pada folder resources/views/admin/banks :
+
+Buka file index.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Daftar Bank')
+@section('styles')
+<style>
+body {
+background-color: #f8f9fa; /* Latar terang */
+color: #212529;
+}
+.card {
+background-color: #ffffff; /* Card putih */
+color: #212529;
+border: 1px solid #ddd;
+}
+.table-container {
+background-color: #ffffff; /* Tabel putih */
+border-radius: 5px;
+padding: 10px;
+overflow-x: auto;
+}
+.table thead {
+
+62 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+background-color: #ff6f00; /* Header oranye */
+color: #fff;
+}
+.table tbody tr td {
+color: #212529;
+}
+.btn-orange {
+background-color: #ff6f00;
+color: #fff;
+border: none;
+}
+.btn-orange:hover {
+background-color: #e65c00;
+}
+.btn-success {
+background-color: #28a745;
+border: none;
+}
+.btn-success:hover {
+background-color: #218838;
+}
+.form-control-light {
+background-color: #ffffff;
+border: 1px solid #ccc;
+color: #212529;
+}
+.pagination .page-link {
+background-color: #ffffff;
+color: #212529;
+border: 1px solid #ddd;
+}
+.pagination .page-link:hover {
+background-color: #ff6f00;
+color: #fff;
+}
+.pagination .active .page-link {
+
+63 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+background-color: #ff6f00;
+color: #fff;
+border-color: #ff6f00;
+}
+</style>
+@endsection
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+<h3>Daftar Bank</h3>
+<div class="d-flex gap-2 flex-wrap">
+<input type="text" id="searchInput" class="form-control form-control-light"
+placeholder="Cari bank...">
+<a href="{{ route('admin.banks.create') }}" class="btn btn-orange">Tambah
+Bank</a>
+</div>
+</div>
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+{{ session('success') }}
+<button type="button" class="btn-close" data-bs-dismiss="alert" arialabel="Close"></button>
+</div>
+@endif
+<div class="card shadow-sm">
+<div class="card-body table-container">
+<table class="table table-hover mb-0" id="bankTable">
+<thead>
+<tr>
+<th style="width:50px;">No</th>
+<th>Nama Bank</th>
+<th>No. Rekening</th>
+<th>Atas Nama</th>
+<th style="width:150px;">Aksi</th>
+</tr>
+</thead>
+<tbody>
+@forelse($banks as $bank)
+<tr>
+<td>{{ $loop->iteration }}</td>
+<td>{{ $bank->name }}</td>
+
+64 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<td>{{ $bank->account_number }}</td>
+<td>{{ $bank->account_name }}</td>
+<td class="d-flex gap-1">
+<a href="{{ route('admin.banks.edit', $bank->id) }}"
+class="btn btn-primary btn-sm">Edit</a>
+<form action="{{ route('admin.banks.destroy', $bank->id) }}"
+method="POST" class="d-inline" onsubmit="return confirm('Hapus bank ini?')">
+@csrf
+@method('DELETE')
+<button class="btn btn-danger btn-sm">Hapus</button>
+</form>
+</td>
+</tr>
+@empty
+<tr>
+<td colspan="5" class="text-center">Belum ada bank
+tersedia.</td>
+</tr>
+@endforelse
+</tbody>
+</table>
+{{-- Pagination --}}
+<div class="mt-3 d-flex justify-content-end">
+{{ $banks->withQueryString()->links() }}
+</div>
+</div>
+</div>
+@endsection
+@section('scripts')
+<script>
+// Search filter
+const searchInput = document.getElementById('searchInput');
+const bankTable =
+document.getElementById('bankTable').getElementsByTagName('tbody')[0];
+searchInput.addEventListener('keyup', function() {
+const filter = this.value.toLowerCase();
+Array.from(bankTable.rows).forEach(row => {
+const name = row.cells[1].textContent.toLowerCase();
+const number = row.cells[2].textContent.toLowerCase();
+const account = row.cells[3].textContent.toLowerCase();
+
+65 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+row.style.display = (name.includes(filter) || number.includes(filter) ||
+account.includes(filter)) ? '' : 'none';
+});
+});
+</script>
+@endsection
+
+(b). Buat File create.blade.php pada folder resources/views/admin/banks :
+
+Buka file create.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Tambah Bank')
+@section('styles')
+<style>
+body {
+background-color: #f8f9fa; /* Latar terang */
+color: #212529;
+}
+.card {
+background-color: #ffffff;
+border: 1px solid #ddd;
+border-radius: 5px;
+padding: 20px;
+}
+
+66 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+.form-control-light {
+background-color: #ffffff;
+border: 1px solid #ccc;
+color: #212529;
+}
+.btn-orange {
+background-color: #ff6f00;
+color: #fff;
+border: none;
+}
+.btn-orange:hover {
+background-color: #e65c00;
+}
+.btn-success {
+background-color: #28a745;
+color: #fff;
+border: none;
+}
+.btn-success:hover {
+background-color: #218838;
+}
+.btn-secondary {
+background-color: #6c757d;
+color: #fff;
+border: none;
+}
+.btn-secondary:hover {
+background-color: #5a6268;
+}
+</style>
+@endsection
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-3">
+<h3>Tambah Bank</h3>
+<a href="{{ route('admin.banks.index') }}" class="btn btn-secondary">Kembali</a>
+</div>
+@if ($errors->any())
+<div class="alert alert-danger">
+
+67 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<ul class="mb-0">
+@foreach ($errors->all() as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+</div>
+@endif
+<div class="card shadow-sm">
+<form action="{{ route('admin.banks.store') }}" method="POST">
+@csrf
+<div class="mb-3">
+<label class="form-label">Nama Bank</label>
+<input type="text" name="name" class="form-control form-control-light"
+required>
+</div>
+<div class="mb-3">
+<label class="form-label">No. Rekening</label>
+<input type="text" name="account_number" class="form-control formcontrol-light" required>
+</div>
+<div class="mb-3">
+<label class="form-label">Atas Nama</label>
+<input type="text" name="account_name" class="form-control form-controllight" required>
+</div>
+<div class="d-flex gap-2">
+<button type="submit" class="btn btn-orange">Simpan</button>
+<a href="{{ route('admin.banks.index') }}" class="btn btnsecondary">Batal</a>
+</div>
+</form>
+</div>
+@endsection
+
+68 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+(c). Buat File edit.blade.php pada folder resources/views/admin/banks :
+
+Buka file edit.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Edit Bank')
+@section('styles')
+<style>
+body {
+background-color: #f8f9fa; /* Latar terang */
+color: #212529;
+}
+.card {
+background-color: #ffffff;
+border: 1px solid #ddd;
+border-radius: 5px;
+padding: 20px;
+}
+.form-control-light {
+background-color: #ffffff;
+border: 1px solid #ccc;
+color: #212529;
+}
+.btn-orange {
+background-color: #ff6f00;
+color: #fff;
+border: none;
+
+69 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+}
+.btn-orange:hover {
+background-color: #e65c00;
+}
+.btn-success {
+background-color: #28a745;
+color: #fff;
+border: none;
+}
+.btn-success:hover {
+background-color: #218838;
+}
+.btn-secondary {
+background-color: #6c757d;
+color: #fff;
+border: none;
+}
+.btn-secondary:hover {
+background-color: #5a6268;
+}
+</style>
+@endsection
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-3">
+<h3>Edit Bank</h3>
+<a href="{{ route('admin.banks.index') }}" class="btn btn-secondary">Kembali</a>
+</div>
+@if ($errors->any())
+<div class="alert alert-danger">
+<ul class="mb-0">
+@foreach ($errors->all() as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+</div>
+@endif
+<div class="card shadow-sm">
+<form action="{{ route('admin.banks.update', $bank->id) }}" method="POST">
+
+70 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+@csrf
+@method('PUT')
+<div class="mb-3">
+<label class="form-label">Nama Bank</label>
+<input type="text" name="name" class="form-control form-control-light"
+value="{{ $bank->name }}" required>
+</div>
+<div class="mb-3">
+<label class="form-label">No. Rekening</label>
+<input type="text" name="account_number" class="form-control formcontrol-light" value="{{ $bank->account_number }}" required>
+</div>
+<div class="mb-3">
+<label class="form-label">Atas Nama</label>
+<input type="text" name="account_name" class="form-control form-controllight" value="{{ $bank->account_name }}" required>
+</div>
+<div class="d-flex gap-2">
+<button type="submit" class="btn btn-orange">Update</button>
+<a href="{{ route('admin.banks.index') }}" class="btn btnsecondary">Batal</a>
+</div>
+</form>
+</div>
+@endsection
+
+71 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+4. FOLDER CATEGORIS:
+Buat Folder categoris pada folder resources/views/admin/categories :
+
+5. PROGRAM CRUD CATEGORIES:
+(a). Buat File index.blade.php pada folder resources/views/admin/categories :
+
+Buka file index.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Kategori')
+@section('styles')
+<style>
+
+72 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+body {
+background-color: #f8f9fa; /* Warna dashboard terang */
+color: #212529;
+}
+.card {
+background-color: #ffffff;
+border: none;
+}
+.table-container {
+background-color: #ffffff;
+border-radius: 5px;
+padding: 10px;
+overflow-x: auto;
+}
+.table thead {
+background-color: #ff6f00; /* Header oranye */
+color: #fff;
+}
+.table tbody tr td {
+color: #212529;
+}
+.btn-orange {
+background-color: #ff6f00;
+color: #fff;
+border: none;
+}
+.btn-orange:hover {
+background-color: #e65c00;
+}
+.form-control-search {
+width: 250px;
+}
+</style>
+@endsection
+@section('content')
+<div class="container-fluid">
+
+73 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+<h3>Daftar Kategori</h3>
+<div class="d-flex gap-2 flex-wrap">
+<form action="{{ route('admin.categories.index') }}" method="GET"
+class="d-flex">
+<input type="text" name="search" value="{{ request('search') }}"
+class="form-control form-control-search" placeholder="Cari kategori...">
+<button type="submit" class="btn btn-orange ms-2">Cari</button>
+</form>
+<a href="{{ route('admin.categories.create') }}" class="btn btnorange">Tambah Kategori</a>
+</div>
+</div>
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+{{ session('success') }}
+<button type="button" class="btn-close" data-bs-dismiss="alert" arialabel="Close"></button>
+</div>
+@endif
+<div class="card shadow-sm">
+<div class="card-body table-container">
+<table class="table table-hover mb-0" id="categoryTable">
+<thead>
+<tr>
+<th style="width:50px;">No</th>
+<th>Nama</th>
+<th>Slug</th>
+<th style="width:180px;">Aksi</th>
+</tr>
+</thead>
+<tbody>
+@forelse($categories as $index => $c)
+<tr>
+<td>{{ $categories->firstItem() + $index }}</td>
+<td>{{ $c->name }}</td>
+<td>{{ $c->slug }}</td>
+<td class="d-flex gap-1">
+<a href="{{ route('admin.categories.edit', $c->id) }}"
+class="btn btn-warning btn-sm">
+
+74 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<i class="bi bi-pencil-square"></i> Edit
+</a>
+<form action="{{ route('admin.categories.destroy', $c>id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin
+menghapus kategori ini?');">
+@csrf
+@method('DELETE')
+<button class="btn btn-danger btn-sm">
+<i class="bi bi-trash"></i> Hapus
+</button>
+</form>
+</td>
+</tr>
+@empty
+<tr>
+<td colspan="4" class="text-center">Belum ada kategori</td>
+</tr>
+@endforelse
+</tbody>
+</table>
+{{-- Pagination --}}
+<div class="mt-3 d-flex justify-content-end">
+{{ $categories->withQueryString()->links() }}
+</div>
+</div>
+</div>
+</div>
+@endsection
+
+(b). Buat File create.blade.php pada folder resources/views/admin/categories :
+
+75 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+Buka file create.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Tambah Kategori')
+@section('content')
+<div class="container-fluid">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h3>Tambah Kategori</h3>
+<a href="{{ route('admin.categories.index') }}" class="btn btn-secondary">
+<i class="bi bi-arrow-left-circle"></i> Kembali
+</a>
+</div>
+@if($errors->any())
+<div class="alert alert-danger">
+<ul class="mb-0">
+@foreach($errors->all() as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+</div>
+@endif
+<form method="POST" action="{{ route('admin.categories.store') }}">
+@csrf
+<div class="mb-3">
+<label for="name" class="form-label">Nama Kategori</label>
+<input type="text" name="name" id="name" class="form-control" value="{{
+old('name') }}" required>
+</div>
+<button class="btn btn-primary">
+<i class="bi bi-save"></i> Simpan
+</button>
+</form>
+</div>
+@endsection
+
+76 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+(c). Buat File edit.blade.php pada folder resources/views/admin/categories :
+
+Buka file edit.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Edit Kategori')
+@section('styles')
+<style>
+body {
+background-color: #f8f9fa; /* Warna dashboard terang */
+color: #212529;
+}
+.card {
+background-color: #ffffff;
+border: none;
+}
+.form-control {
+border-radius: 4px;
+}
+.btn-orange {
+background-color: #ff6f00;
+color: #fff;
+border: none;
+}
+.btn-orange:hover {
+background-color: #e65c00;
+}
+</style>
+
+77 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+@endsection
+@section('content')
+<div class="container-fluid">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h3>Edit Kategori</h3>
+<a href="{{ route('admin.categories.index') }}" class="btn btn-secondary">
+<i class="bi bi-arrow-left-circle"></i> Kembali
+</a>
+</div>
+@if($errors->any())
+<div class="alert alert-danger">
+<ul class="mb-0">
+@foreach($errors->all() as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+</div>
+@endif
+<div class="card shadow-sm">
+<div class="card-body">
+<form method="POST" action="{{ route('admin.categories.update',
+$category->id) }}">
+@csrf
+@method('PUT')
+<div class="mb-3">
+<label for="name" class="form-label">Nama Kategori</label>
+<input type="text" name="name" id="name" class="form-control"
+value="{{ old('name', $category->name) }}" required>
+</div>
+<button class="btn btn-orange">
+<i class="bi bi-save"></i> Update
+</button>
+</form>
+</div>
+</div>
+</div>
+@endsection
+
+78 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+6. FOLDER LAYOUT
+Buat Folder layout pada folder resources/views/admin/layout :
+
+7. PROGRAM APP DAN SIDEBAR:
+(a). Buat File app.blade.php pada folder resources/views/admin/layout :
+
+Buka file app.blade.php dan ketik program dibawah ini :
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>@yield('title', 'Admin Panel')</title>
+
+79 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+{{-- Bootstrap CSS --}}
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrapicons.css" rel="stylesheet">
+<style>
+body {
+min-height: 100vh;
+margin: 0;
+font-family: Arial, sans-serif;
+}
+/* Sidebar */
+.sidebar {
+width: 220px;
+position: fixed;
+top: 0;
+left: 0;
+bottom: 0;
+background-color: #800000;
+color: #fff;
+padding: 1rem;
+}
+.sidebar a {
+display: flex;
+align-items: center;
+padding: 0.5rem 1rem;
+color: #fff;
+text-decoration: none;
+border-radius: 6px;
+margin-bottom: 0.3rem;
+transition: all 0.2s;
+}
+.sidebar a:hover,
+.sidebar a.active {
+background-color: #b22222;
+color: #fff;
+}
+
+80 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+.sidebar a i {
+margin-right: 0.5rem;
+}
+/* Navbar */
+nav.navbar {
+position: fixed;
+top: 0;
+left: 220px;
+right: 0;
+z-index: 1030;
+background-color: #000;
+}
+/* Main content */
+.main-content {
+margin-left: 220px;
+padding: 5.5rem 2rem 2rem 2rem;
+}
+/* Dropdown notifikasi */
+.notif-badge {
+position: absolute;
+top: 0;
+right: 0;
+font-size: 0.7rem;
+}
+@media (max-width: 767.98px) {
+.sidebar {
+width: 100%;
+position: relative;
+}
+nav.navbar {
+left: 0;
+}
+.main-content {
+margin-left: 0;
+padding-top: 6rem;
+}
+}
+</style>
+
+81 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+@yield('styles')
+</head>
+<body>
+{{-- Sidebar --}}
+@include('admin.layout.sidebar')
+{{-- Navbar --}}
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+<div class="container-fluid">
+<span class="navbar-brand mb-0 h1 text-white">Dashboard Admin</span>
+<ul class="navbar-nav ms-auto align-items-center">
+{{-- Notifikasi --}}
+<li class="nav-item dropdown me-3">
+<a class="nav-link position-relative text-white" href="#"
+id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+<i class="bi bi-bell fs-5"></i>
+<span class="badge bg-danger rounded-pill notifbadge">3</span>
+</a>
+<ul class="dropdown-menu dropdown-menu-end" arialabelledby="notifDropdown">
+<li><a class="dropdown-item" href="#">Transaksi baru
+diterima</a></li>
+<li><a class="dropdown-item" href="#">Produk habis
+stok</a></li>
+<li><a class="dropdown-item" href="#">Update sistem
+tersedia</a></li>
+</ul>
+</li>
+{{-- User Login & Logout --}}
+@auth
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle d-flex align-items-center
+text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" ariaexpanded="false">
+<img src="https://cdn-iconspng.flaticon.com/512/147/147144.png" alt="Profile" class="rounded-circle me-2"
+style="width: 35px; height: 35px;">
+{{ auth()->user()->name }}
+
+82 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+</a>
+<ul class="dropdown-menu dropdown-menu-end" arialabelledby="userDropdown">
+<li><a class="dropdown-item" href="#">Profil</a></li>
+<li><a class="dropdown-item" href="#">Pengaturan</a></li>
+<li><hr class="dropdown-divider"></li>
+<li>
+<form action="{{ route('logout') }}" method="POST">
+@csrf
+<button class="dropdown-item">Logout</button>
+</form>
+</li>
+</ul>
+</li>
+@else
+<a href="{{ route('login') }}" class="btn btn-outlinelight">Login</a>
+@endauth
+</ul>
+</div>
+</nav>
+{{-- Main Content --}}
+<div class="main-content">
+@yield('content')
+</div>
+{{-- Bootstrap JS --}}
+<script
+src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"><
+/script>
+@yield('scripts')
+</body>
+</html>
+
+83 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+(b). Buat File sidebar.blade.php pada folder resources/views/admin/layout :
+
+Buka file sidebar.blade.php dan ketik program dibawah ini :
+<div class="sidebar d-flex flex-column">
+{{-- Header --}}
+<div class="text-center mb-4 p-3" style="background: linear-gradient(135deg,
+#990000, #b22222); border-radius: 12px;">
+<img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png"
+alt="Logo Toko"
+class="img-fluid mb-2"
+style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid
+#fff;">
+<h5 class="fw-bold text-white mt-2">Toko Online</h5>
+</div>
+{{-- Menu --}}
+<a href="{{ route('admin.dashboard') }}" class="{{
+Request::is('admin/dashboard') ? 'active' : '' }}">
+<i class="bi bi-speedometer2"></i> Dashboard
+</a>
+<a href="{{ route('admin.products.index') }}" class="{{
+Request::is('admin/products*') ? 'active' : '' }}">
+<i class="bi bi-box-seam"></i> Produk
+</a>
+<a href="{{ route('admin.categories.index') }}" class="{{
+Request::is('admin/categories*') ? 'active' : '' }}">
+<i class="bi bi-tags"></i> Kategori
+</a>
+<a href="{{ route('admin.banks.index') }}" class="{{ Request::is('admin/banks*')
+? 'active' : '' }}">
+
+84 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<i class="bi bi-bank2"></i> Bank
+</a>
+<a href="{{ route('admin.transactions.index') }}" class="{{
+Request::is('admin/transactions*') ? 'active' : '' }}">
+<i class="bi bi-receipt"></i> Laporan Transaksi
+</a>
+{{-- Tambahkan menu Transaksi Terbaru --}}
+<a href="{{ route('admin.transactions.recent') }}" class="{{
+Request::is('admin/transactions/recent') ? 'active' : '' }}">
+<i class="bi bi-clock-history"></i> Transaksi Terbaru
+</a>
+<a href="{{ route('admin.users.index') }}" class="{{ Request::is('admin/users*')
+? 'active' : '' }}">
+<i class="bi bi-people"></i> Pengguna
+</a>
+</div>
+
+8. FOLDER PRODUCT:
+Buat Folder products pada folder resources/views/admin/products :
+
+85 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+9. PROGRAM CRUD PPRODUCT:
+(a). Buat File index.blade.php pada folder resources/views/admin/product :
+
+Buka file index.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Daftar Produk')
+@section('styles')
+<style>
+body {
+background-color: #f8f9fa; /* Warna dashboard terang */
+color: #212529;
+}
+.card {
+background-color: #ffffff;
+border: none;
+}
+.table-container {
+background-color: #ffffff;
+border-radius: 5px;
+padding: 10px;
+overflow-x: auto;
+}
+.table thead {
+background-color: #ff6f00; /* Header oranye */
+
+86 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+color: #fff;
+}
+.table tbody tr td {
+color: #212529;
+}
+.btn-orange {
+background-color: #ff6f00;
+color: #fff;
+border: none;
+}
+.btn-orange:hover {
+background-color: #e65c00;
+}
+.form-control-search {
+width: 250px;
+}
+</style>
+@endsection
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+<h3>Daftar Produk</h3>
+<div class="d-flex gap-2 flex-wrap">
+<!-- Form pencarian -->
+<form action="{{ route('admin.products.index') }}" method="GET" class="dflex">
+<input type="text" name="search" value="{{ request('search') }}"
+class="form-control form-control-search" placeholder="Cari produk...">
+<button type="submit" class="btn btn-orange ms-2">Cari</button>
+</form>
+<a href="{{ route('admin.products.create') }}" class="btn btn-orange">Tambah
+Produk</a>
+</div>
+</div>
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+{{ session('success') }}
+<button type="button" class="btn-close" data-bs-dismiss="alert" arialabel="Close"></button>
+
+87 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+</div>
+@endif
+<div class="card shadow-sm">
+<div class="card-body table-container">
+<table class="table table-hover mb-0" id="productTable">
+<thead>
+<tr>
+<th style="width:50px;">No</th>
+<th>Nama Produk</th>
+<th>Kategori</th>
+<th>Harga</th>
+<th>Stok</th>
+<th>Gambar</th>
+<th style="width:150px;">Aksi</th>
+</tr>
+</thead>
+<tbody>
+@forelse($products as $index => $p)
+<tr>
+<td>{{ $products->firstItem() + $index }}</td>
+<td>{{ $p->name }}</td>
+<td>{{ $p->category->name ?? '-' }}</td>
+<td>Rp {{ number_format($p->price, 0, ',', '.') }}</td>
+<td>{{ $p->stock }}</td>
+<td>
+@if($p->image)
+<img src="{{ asset('storage/'.$p->image) }}" width="60">
+@else
+@endif
+</td>
+<td class="d-flex gap-1">
+<a href="{{ route('admin.products.edit', $p->id) }}"
+class="btn btn-primary btn-sm">Edit</a>
+<form action="{{ route('admin.products.destroy', $p->id) }}"
+method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus
+produk ini?');">
+@csrf
+@method('DELETE')
+<button class="btn btn-danger btn-sm">Hapus</button>
+</form>
+
+88 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+</td>
+</tr>
+@empty
+<tr>
+<td colspan="7" class="text-center">Belum ada produk</td>
+</tr>
+@endforelse
+</tbody>
+</table>
+{{-- Pagination --}}
+<div class="mt-3 d-flex justify-content-end">
+{{ $products->withQueryString()->links('pagination::bootstrap-5') }}
+</div>
+</div>
+</div>
+@endsection
+
+(b). Buat File create.blade.php pada folder resources/views/admin/product :
+
+89 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+Buka file create.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Tambah Produk')
+@section('content')
+<div class="container-fluid">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h3>Tambah Produk</h3>
+<a href="{{ route('admin.products.index') }}" class="btn btn-secondary">
+<i class="bi bi-arrow-left-circle"></i> Kembali
+</a>
+</div>
+@if ($errors->any())
+<div class="alert alert-danger">
+<ul class="mb-0">
+@foreach ($errors->all() as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+</div>
+@endif
+<form method="POST" action="{{ route('admin.products.store') }}"
+enctype="multipart/form-data">
+@csrf
+<div class="mb-3">
+<label class="form-label">Kategori</label>
+<select name="category_id" class="form-select">
+<option value="">-- Pilih Kategori --</option>
+@foreach($categories as $c)
+<option value="{{ $c->id }}" {{ old('category_id') == $c->id ?
+'selected' : '' }}>
+{{ $c->name }}
+</option>
+@endforeach
+</select>
+</div>
+<div class="mb-3">
+
+90 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<label class="form-label">Nama Produk</label>
+<input type="text" name="name" class="form-control" value="{{
+old('name') }}">
+</div>
+<div class="mb-3">
+<label class="form-label">Deskripsi</label>
+<textarea name="description" class="form-control" rows="4">{{
+old('description') }}</textarea>
+</div>
+<div class="mb-3">
+<label class="form-label">Harga</label>
+<input type="number" name="price" class="form-control" value="{{
+old('price') }}">
+</div>
+<div class="mb-3">
+<label class="form-label">Stok</label>
+<input type="number" name="stock" class="form-control" value="{{
+old('stock') }}">
+</div>
+<div class="mb-3">
+<label class="form-label">Gambar Produk</label>
+<input type="file" name="image" class="form-control">
+</div>
+<button class="btn btn-primary"><i class="bi bi-save"></i> Simpan</button>
+</form>
+</div>
+@endsection
+
+91 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+(c). Buat File edit.blade.php pada folder resources/views/admin/product :
+
+Buka file edit.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Edit Produk')
+@section('styles')
+<style>
+body {
+background-color: #f8f9fa; /* Warna dashboard terang */
+color: #212529;
+}
+.card {
+background-color: #ffffff;
+border: none;
+}
+.form-label {
+font-weight: 500;
+}
+.btn-orange {
+background-color: #ff6f00;
+color: #fff;
+border: none;
+}
+.btn-orange:hover {
+background-color: #e65c00;
+}
+
+92 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+.form-control-search {
+width: 250px;
+}
+img.preview-image {
+border-radius: 5px;
+}
+</style>
+@endsection
+@section('content')
+<div class="container-fluid">
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+<h3>Edit Produk</h3>
+<a href="{{ route('admin.products.index') }}" class="btn btn-secondary">
+<i class="bi bi-arrow-left-circle"></i> Kembali
+</a>
+</div>
+@if ($errors->any())
+<div class="alert alert-danger">
+<ul class="mb-0">
+@foreach ($errors->all() as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+</div>
+@endif
+<div class="card shadow-sm p-3">
+<form method="POST" action="{{ route('admin.products.update', $product->id)
+}}" enctype="multipart/form-data">
+@csrf
+@method('PUT')
+<div class="mb-3">
+<label class="form-label">Kategori</label>
+<select name="category_id" class="form-select">
+<option value="">-- Pilih Kategori --</option>
+@foreach($categories as $c)
+<option value="{{ $c->id }}" {{ $product->category_id == $c->id
+? 'selected' : '' }}>
+
+93 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+{{ $c->name }}
+</option>
+@endforeach
+</select>
+</div>
+<div class="mb-3">
+<label class="form-label">Nama Produk</label>
+<input type="text" name="name" class="form-control" value="{{
+old('name', $product->name) }}">
+</div>
+<div class="mb-3">
+<label class="form-label">Deskripsi</label>
+<textarea name="description" class="form-control" rows="4">{{
+old('description', $product->description) }}</textarea>
+</div>
+<div class="mb-3">
+<label class="form-label">Harga</label>
+<input type="number" name="price" class="form-control" value="{{
+old('price', $product->price) }}">
+</div>
+<div class="mb-3">
+<label class="form-label">Stok</label>
+<input type="number" name="stock" class="form-control" value="{{
+old('stock', $product->stock) }}">
+</div>
+<div class="mb-3">
+<label class="form-label">Gambar Produk</label><br>
+@if($product->image)
+<img src="{{ asset('storage/'.$product->image) }}" width="80"
+class="preview-image mb-2">
+@endif
+<input type="file" name="image" class="form-control">
+</div>
+<button class="btn btn-orange">
+<i class="bi bi-pencil-square"></i> Update
+</button>
+
+94 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<a href="{{ route('admin.products.index') }}" class="btn btn-secondary
+ms-2">Batal</a>
+</form>
+</div>
+</div>
+@endsection
+
+95 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+10. FOLDER TRANSACTION:
+Buat Folder transactions pada folder resources/views/admin/transactions :
+
+11. PROGRAM TRANSACTIONS:
+(a). Buat File index.blade.php pada folder resources/views/admin/transactions:
+
+Buka file index.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Laporan Transaksi')
+@section('content')
+<div class="container-fluid">
+
+96 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+<h3>Laporan Transaksi</h3>
+</div>
+{{-- FILTER --}}
+<form method="GET" class="row g-3 mb-3">
+<div class="col-md-3">
+<label>Status</label>
+<select name="status" class="form-select">
+<option value="">-- Semua Status --</option>
+<option value="pending" {{ request('status') == 'pending' ?
+'selected' : '' }}>Pending</option>
+<option value="paid" {{ request('status') == 'paid' ? 'selected' :
+'' }}>Paid</option>
+<option value="cancel" {{ request('status') == 'cancel' ? 'selected'
+: '' }}>Cancel</option>
+</select>
+</div>
+<div class="col-md-3">
+<label>Dari Tanggal</label>
+<input type="date" name="from_date" class="form-control" value="{{
+request('from_date') }}">
+</div>
+<div class="col-md-3">
+<label>Sampai Tanggal</label>
+<input type="date" name="to_date" class="form-control" value="{{
+request('to_date') }}">
+</div>
+<div class="col-md-3 d-flex align-items-end">
+<button type="submit" class="btn btn-primary me-2">Filter</button>
+<a href="{{ route('admin.transactions.index') }}" class="btn btnsecondary">Reset</a>
+</div>
+</form>
+{{-- TABEL TRANSAKSI --}}
+<div class="card">
+<div class="card-body table-responsive">
+<table class="table table-bordered table-striped align-middle">
+<thead class="table-dark">
+<tr>
+<th>No</th>
+<th>Invoice</th>
+
+97 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<th>User</th>
+<th>Produk</th>
+<th>Total</th>
+<th>Status</th>
+<th>Tanggal</th>
+</tr>
+</thead>
+<tbody>
+@forelse($transactions as $index => $transaction)
+<tr>
+<td>{{ $transactions->firstItem() + $index }}</td>
+<td>#INV{{ str_pad($transaction->id, 5, '0', STR_PAD_LEFT)
+}}</td>
+<td>{{ $transaction->user->name ?? 'Guest' }}</td>
+<td>
+@foreach($transaction->items as $item)
+{{ $item->product->name ?? '-' }} (x{{ $item->qty
+}})<br>
+@endforeach
+</td>
+<td>Rp {{ number_format($transaction->total, 0, ',', '.')
+}}</td>
+<td>
+@if($transaction->status == 'pending')
+<span class="badge bg-warning textdark">Pending</span>
+@elseif($transaction->status == 'paid')
+<span class="badge bg-success">Paid</span>
+@elseif($transaction->status == 'cancel')
+<span class="badge bg-danger">Cancel</span>
+@endif
+</td>
+<td>{{ $transaction->created_at->format('d M Y H:i') }}</td>
+</tr>
+@empty
+<tr>
+<td colspan="7" class="text-center">Belum ada transaksi</td>
+</tr>
+@endforelse
+</tbody>
+</table>
+{{-- Pagination --}}
+
+98 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<div class="mt-3 d-flex justify-content-end">
+{{ $transactions->withQueryString()->links() }}
+</div>
+</div>
+</div>
+</div>
+@endsection
+
+(b). Buat File recent.blade.php pada folder resources/views/admin/transactions:
+
+Buka file recent.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Transaksi Terbaru')
+@section('content')
+<div class="container">
+<h3 class="mb-4">Transaksi Terbaru</h3>
+<div class="card shadow-sm">
+<div class="card-body">
+<table class="table table-bordered table-hover">
+
+99 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<thead class="table-dark">
+<tr>
+<th>#</th>
+<th>Invoice</th>
+<th>User</th>
+<th>Status</th>
+<th>Tanggal</th>
+<th>Aksi</th>
+</tr>
+</thead>
+<tbody>
+@forelse($recentTransactions as $transaction)
+<tr>
+<td>{{ $loop->iteration }}</td>
+<td>{{ $transaction->invoice }}</td>
+<td>{{ $transaction->user->name }}</td>
+<td>
+@if($transaction->status == 'pending')
+<span class="badge bg-warning text-dark">{{
+$transaction->status }}</span>
+@elseif($transaction->status == 'completed')
+<span class="badge bg-success">{{ $transaction>status }}</span>
+@elseif($transaction->status == 'canceled')
+<span class="badge bg-danger">{{ $transaction>status }}</span>
+@else
+<span class="badge bg-secondary">{{ $transaction>status }}</span>
+@endif
+</td>
+<td>{{ $transaction->created_at->format('d-m-Y H:i') }}</td>
+<td>
+<a href="{{ route('admin.transactions.index', ['status'
+=> $transaction->status]) }}" class="btn btn-sm btn-primary">
+Detail
+</a>
+</td>
+</tr>
+@empty
+<tr>
+<td colspan="6" class="text-center">Tidak ada transaksi
+terbaru</td>
+
+100 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+</tr>
+@endforelse
+</tbody>
+</table>
+</div>
+</div>
+</div>
+@endsection
+
+12. FOLDER USERS:
+Buat Folder users pada folder resources/views/admin/users :
+
+101 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+13. PROGRAM USERS:
+(a). Buat File index.blade.php pada folder resources/views/admin/users:
+
+Buka file index.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Daftar User')
+@section('content')
+<div class="container-fluid">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h3>Daftar User</h3>
+<a href="{{ route('admin.users.create') }}" class="btn btn-primary">
+<i class="bi bi-plus-circle"></i> Tambah User
+</a>
+</div>
+@if(session('success'))
+<div class="alert alert-success">{{ session('success') }}</div>
+@endif
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>No</th>
+<th>Nama</th>
+<th>Email</th>
+<th>Role</th>
+<th width="180px">Aksi</th>
+</tr>
+
+102 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+</thead>
+<tbody>
+@forelse($users as $u)
+<tr>
+<td>{{ $loop->iteration + ($users->currentPage()-1) * $users>perPage() }}</td>
+<td>{{ $u->name }}</td>
+<td>{{ $u->email }}</td>
+<td>{{ ucfirst($u->role) }}</td>
+<td>
+<a href="{{ route('admin.users.edit', $u->id) }}" class="btn
+btn-warning btn-sm">
+<i class="bi bi-pencil-square"></i> Edit
+</a>
+<form action="{{ route('admin.users.destroy', $u->id) }}"
+method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus user
+ini?');">
+@csrf
+@method('DELETE')
+<button class="btn btn-danger btn-sm">
+<i class="bi bi-trash"></i> Hapus
+</button>
+</form>
+</td>
+</tr>
+@empty
+<tr>
+<td colspan="5" class="text-center">Belum ada user</td>
+</tr>
+@endforelse
+</tbody>
+</table>
+<div class="d-flex justify-content-end">
+{{ $users->links() }}
+</div>
+</div>
+@endsection
+
+103 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+(b). Buat File create.blade.php pada folder resources/views/admin/users:
+
+Buka file create.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Tambah User')
+@section('content')
+<div class="container-fluid">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h3>Tambah User</h3>
+<a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
+<i class="bi bi-arrow-left-circle"></i> Kembali
+</a>
+</div>
+@if ($errors->any())
+<div class="alert alert-danger">
+<ul class="mb-0">
+@foreach ($errors->all() as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+</div>
+@endif
+<form action="{{ route('admin.users.store') }}" method="POST">
+@csrf
+
+104 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<div class="mb-3">
+<label class="form-label">Nama</label>
+<input type="text" name="name" class="form-control" value="{{
+old('name') }}" required>
+</div>
+<div class="mb-3">
+<label class="form-label">Email</label>
+<input type="email" name="email" class="form-control" value="{{
+old('email') }}" required>
+</div>
+<div class="mb-3">
+<label class="form-label">Password</label>
+<input type="password" name="password" class="form-control" required>
+</div>
+<div class="mb-3">
+<label class="form-label">Konfirmasi Password</label>
+<input type="password" name="password_confirmation" class="form-control"
+required>
+</div>
+<div class="mb-3">
+<label class="form-label">Role</label>
+<select name="role" class="form-select" required>
+<option value="admin">Admin</option>
+<option value="kasir">Kasir</option>
+<option value="customer">Customer</option>
+</select>
+</div>
+<button class="btn btn-primary">
+<i class="bi bi-save"></i> Simpan
+</button>
+</form>
+</div>
+@endsection
+
+105 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+(c). Buat File edit.blade.php pada folder resources/views/admin/users:
+
+Buka file edit.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Edit User')
+@section('content')
+<div class="container-fluid">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h3>Edit User</h3>
+<a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
+<i class="bi bi-arrow-left-circle"></i> Kembali
+</a>
+</div>
+@if ($errors->any())
+<div class="alert alert-danger">
+<ul class="mb-0">
+@foreach ($errors->all() as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+</div>
+@endif
+<form action="{{ route('admin.users.update', $user->id) }}" method="POST">
+@csrf
+@method('PUT')
+
+106 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<div class="mb-3">
+<label class="form-label">Nama</label>
+<input type="text" name="name" class="form-control" value="{{
+old('name', $user->name) }}" required>
+</div>
+<div class="mb-3">
+<label class="form-label">Email</label>
+<input type="email" name="email" class="form-control" value="{{
+old('email', $user->email) }}" required>
+</div>
+<div class="mb-3">
+<label class="form-label">Password (kosongkan jika tidak diubah)</label>
+<input type="password" name="password" class="form-control">
+</div>
+<div class="mb-3">
+<label class="form-label">Konfirmasi Password</label>
+<input type="password" name="password_confirmation" class="formcontrol">
+</div>
+<div class="mb-3">
+<label class="form-label">Role</label>
+<select name="role" class="form-select" required>
+<option value="admin" {{ $user->role === 'admin' ? 'selected' : ''
+}}>Admin</option>
+<option value="kasir" {{ $user->role === 'kasir' ? 'selected' : ''
+}}>Kasir</option>
+<option value="customer" {{ $user->role === 'customer' ? 'selected'
+: '' }}>Customer</option>
+</select>
+</div>
+<button class="btn btn-primary">
+<i class="bi bi-save"></i> Update
+</button>
+</form>
+</div>
+@endsection
+
+107 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+15. PROGRAM DASHBOARD:
+Buat File dashboard.blade.blade.php pada folder resources/views/admin/:
+
+Buka file dashboard.blade.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Dashboard Admin')
+@section('content')
+<div class="container-fluid">
+<h1 class="mb-4">Dashboard Admin</h1>
+{{-- CARD STATISTIK UTAMA --}}
+<div class="row mb-4">
+{{-- Total Produk --}}
+<div class="col-md-3">
+<div class="card shadow-sm border-left-primary h-100">
+<div class="card-body d-flex align-items-center">
+<i class="bi bi-box-seam fs-1 text-primary me-3"></i>
+<div>
+<h6 class="text-uppercase fw-bold">Total Produk</h6>
+<h3>{{ $productCount }}</h3>
+</div>
+</div>
+
+108 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+</div>
+</div>
+{{-- Total Kategori --}}
+<div class="col-md-3">
+<div class="card shadow-sm border-left-success h-100">
+<div class="card-body d-flex align-items-center">
+<i class="bi bi-tags fs-1 text-success me-3"></i>
+<div>
+<h6 class="text-uppercase fw-bold">Total Kategori</h6>
+<h3>{{ $categoryCount }}</h3>
+</div>
+</div>
+</div>
+</div>
+{{-- Total Transaksi --}}
+<div class="col-md-3">
+<div class="card shadow-sm border-left-warning h-100">
+<div class="card-body d-flex align-items-center">
+<i class="bi bi-receipt fs-1 text-warning me-3"></i>
+<div>
+<h6 class="text-uppercase fw-bold">Total Transaksi</h6>
+<h3>{{ $sales }}</h3>
+</div>
+</div>
+</div>
+</div>
+{{-- Total Pelanggan --}}
+<div class="col-md-3">
+<div class="card shadow-sm border-left-info h-100">
+<div class="card-body d-flex align-items-center">
+<i class="bi bi-people fs-1 text-info me-3"></i>
+<div>
+<h6 class="text-uppercase fw-bold">Total Pelanggan</h6>
+<h3>{{ \App\Models\User::where('role', 'customer')->count()
+}}</h3>
+</div>
+</div>
+</div>
+</div>
+</div>
+{{-- CHART TRANSAKSI 7 HARI TERAKHIR --}}
+<div class="card mb-4 shadow-sm">
+
+109 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<div class="card-header bg-light d-flex align-items-center">
+<i class="bi bi-bar-chart me-2"></i>
+Transaksi 7 Hari Terakhir
+</div>
+<div class="card-body">
+<canvas id="transactionChart" height="100"></canvas>
+</div>
+</div>
+{{-- TABEL TRANSAKSI TERBARU --}}
+<div class="card mb-4 shadow-sm">
+<div class="card-header bg-light d-flex align-items-center">
+<i class="bi bi-clock-history me-2"></i>
+Transaksi Terbaru
+</div>
+<div class="card-body table-responsive">
+<table class="table table-striped table-bordered align-middle">
+<thead class="table-dark">
+<tr>
+<th>No</th>
+<th>Invoice</th>
+<th>Produk</th>
+<th>Qty</th>
+<th>Total</th>
+<th>Status</th>
+<th>Tanggal</th>
+</tr>
+</thead>
+<tbody>
+@forelse($recentTransactions as $index => $transaction)
+<tr>
+<td>{{ $index + 1 }}</td>
+<td>#INV-{{ str_pad($transaction->id, 6, '0',
+STR_PAD_LEFT) }}</td>
+<td>
+@foreach($transaction->items as $item)
+<i class="bi bi-box-seam me-1"></i>{{ $item>product->name ?? '-' }}<br>
+@endforeach
+</td>
+<td>
+@foreach($transaction->items as $item)
+{{ $item->qty }}<br>
+
+110 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+@endforeach
+</td>
+<td>Rp {{ number_format($transaction->total, 0, ',',
+'.') }}</td>
+<td>
+@if($transaction->status === 'pending')
+<span class="badge bg-warning textdark">Pending</span>
+@elseif($transaction->status === 'success')
+<span class="badge bg-success">Success</span>
+@elseif($transaction->status === 'failed')
+<span class="badge bg-danger">Failed</span>
+@endif
+</td>
+<td>{{ $transaction->created_at->format('d M Y H:i')
+}}</td>
+</tr>
+@empty
+<tr>
+<td colspan="7" class="text-center">Belum ada
+transaksi</td>
+</tr>
+@endforelse
+</tbody>
+</table>
+</div>
+</div>
+</div>
+@endsection
+@section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('transactionChart').getContext('2d');
+const transactionChart = new Chart(ctx, {
+type: 'line',
+data: {
+labels: {!! json_encode($chartLabels) !!},
+datasets: [{
+label: 'Jumlah Transaksi',
+data: {!! json_encode($chartValues) !!},
+backgroundColor: 'rgba(54, 162, 235, 0.2)',
+
+111 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+borderColor: 'rgba(54, 162, 235, 1)',
+borderWidth: 2,
+tension: 0.3,
+fill: true
+}]
+},
+options: {
+responsive: true,
+plugins: {
+legend: { display: true }
+},
+scales: {
+y: {
+beginAtZero: true,
+precision: 0
+}
+}
+}
+});
+</script>
+@endsection
+
+16. PROGRAM INDEX:
+Buat File index.blade.php pada folder resources/views/admin/:
+
+112 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+Buka file index.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Daftar Transaksi')
+@section('content')
+<div class="container-fluid">
+<h3 class="mb-4">Daftar Transaksi</h3>
+<table class="table table-bordered table-striped">
+<thead class="table-dark">
+<tr>
+<th>No</th>
+<th>Invoice</th>
+<th>User</th>
+<th>Total</th>
+<th>Status</th>
+<th>Tanggal</th>
+<th>Aksi</th>
+</tr>
+</thead>
+<tbody>
+@forelse($transactions as $index => $transaction)
+<tr>
+<td>{{ $transactions->firstItem() + $index }}</td>
+<td>{{ $transaction->invoice }}</td>
+<td>{{ $transaction->user->name ?? '-' }}</td>
+<td>Rp {{ number_format($transaction->total, 0, ',', '.')
+}}</td>
+<td>{{ ucfirst($transaction->status) }}</td>
+<td>{{ $transaction->created_at->format('d M Y H:i') }}</td>
+<td>
+<a href="{{ route('admin.transactions.show', $transaction>id) }}" class="btn btn-info btn-sm">
+<i class="bi bi-eye"></i> Detail
+</a>
+</td>
+</tr>
+@empty
+<tr>
+<td colspan="7" class="text-center">Belum ada transaksi</td>
+</tr>
+@endforelse
+
+113 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+</tbody>
+</table>
+<div class="d-flex justify-content-end mt-3">
+{{ $transactions->links() }}
+</div>
+</div>
+@endsection
+
+17. PROGRAM SHOW:
+Buat File show.blade.php pada folder resources/views/admin/:
+
+Buka file show.blade.php dan ketik program dibawah ini :
+@extends('admin.layout.app')
+@section('title', 'Detail Transaksi')
+@section('content')
+<div class="container-fluid">
+<h3 class="mb-4">Detail Transaksi - Invoice: {{ $transaction->invoice }}</h3>
+<div class="mb-3">
+
+114 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<strong>User:</strong> {{ $transaction->user->name ?? '-' }} <br>
+<strong>Status:</strong> {{ ucfirst($transaction->status) }} <br>
+<strong>Total:</strong> Rp {{ number_format($transaction->total, 0, ',',
+'.') }} <br>
+<strong>Tanggal:</strong> {{ $transaction->created_at->format('d M Y H:i')
+}}
+</div>
+<table class="table table-bordered table-striped">
+<thead class="table-dark">
+<tr>
+<th>No</th>
+<th>Produk</th>
+<th>Harga</th>
+<th>Qty</th>
+<th>Subtotal</th>
+</tr>
+</thead>
+<tbody>
+@foreach($transaction->items as $index => $item)
+<tr>
+<td>{{ $index + 1 }}</td>
+<td>{{ $item->product->name ?? '-' }}</td>
+<td>Rp {{ number_format($item->price, 0, ',', '.') }}</td>
+<td>{{ $item->qty }}</td>
+<td>Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
+</tr>
+@endforeach
+</tbody>
+</table>
+<a href="{{ route('admin.transactions.index') }}" class="btn btn-secondary mt3">
+<i class="bi bi-arrow-left-circle"></i> Kembali
+</a>
+</div>
+@endsection
+
+115 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+18. PROGRAM SIDEBAR:
+Buat File sidebar.blade.php pada folder resources/views/admin/:
+
+Buka file sidebar.blade.php dan ketik program dibawah ini :
+{{-- SIDEBAR --}}
+<div class="sidebar d-flex flex-column"
+style="width: 220px; position: fixed; height: 100vh; background-color: #800000;
+color: #fff; padding: 1rem; transition: width 0.3s;">
+{{-- HEADER TOKO --}}
+<div class="text-center mb-4 p-3" style="background: linear-gradient(135deg,
+#990000, #b22222); border-radius: 12px;">
+<img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png"
+alt="Logo Toko"
+class="img-fluid mb-2"
+style="width: 70px; height: 70px; object-fit: cover; border-radius:
+50%; border: 2px solid #fff; transition: transform 0.3s;"
+onmouseover="this.style.transform='scale(1.1)';"
+onmouseout="this.style.transform='scale(1)';">
+<h5 class="fw-bold text-white mt-2">Toko Online</h5>
+</div>
+{{-- MENU UTAMA --}}
+<div class="flex-grow-1">
+<a href="{{ route('admin.dashboard') }}" class="d-flex align-items-center
+py-2 px-3 mb-2 rounded sidebar-link {{ Request::is('admin/dashboard') ? 'active' :
+'' }}">
+<i class="bi bi-speedometer2 me-2 fs-5"></i> Dashboard
+
+116 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+</a>
+<a href="{{ route('admin.products.index') }}" class="d-flex align-itemscenter py-2 px-3 mb-2 rounded sidebar-link {{ Request::is('admin/products*') ?
+'active' : '' }}">
+<i class="bi bi-box-seam me-2 fs-5"></i> Produk
+</a>
+<a href="{{ route('admin.categories.index') }}" class="d-flex align-itemscenter py-2 px-3 mb-2 rounded sidebar-link {{ Request::is('admin/categories*') ?
+'active' : '' }}">
+<i class="bi bi-tags me-2 fs-5"></i> Kategori
+</a>
+<a href="{{ route('admin.banks.index') }}" class="d-flex align-items-center
+py-2 px-3 mb-2 rounded sidebar-link {{ Request::is('admin/banks*') ? 'active' : ''
+}}">
+<i class="bi bi-bank2 me-2 fs-5"></i> Bank
+</a>
+<a href="{{ route('admin.transactions.index') }}" class="d-flex align-itemscenter py-2 px-3 mb-2 rounded sidebar-link {{ Request::is('admin/transactions*') ?
+'active' : '' }}">
+<i class="bi bi-receipt me-2 fs-5"></i> Laporan Transaksi
+</a>
+{{-- TRANSAKSI TERBARU --}}
+<a href="{{ route('admin.transactions.recent') }}" class="d-flex alignitems-center py-2 px-3 mb-2 rounded sidebar-link {{
+Request::is('admin/transactions/recent*') ? 'active' : '' }}">
+<i class="bi bi-bell me-2 fs-5"></i> Transaksi Terbaru
+@php
+$newTransactionsCount = \App\Models\Transaction::where('status',
+'pending')->count();
+@endphp
+@if($newTransactionsCount > 0)
+<span class="badge bg-danger ms-auto">{{ $newTransactionsCount
+}}</span>
+@endif
+</a>
+
+117 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<a href="{{ route('admin.users.index') }}" class="d-flex align-items-center
+py-2 px-3 mb-2 rounded sidebar-link {{ Request::is('admin/users*') ? 'active' : ''
+}}">
+<i class="bi bi-people me-2 fs-5"></i> Pengguna
+</a>
+</div>
+</div>
+{{-- TOPBAR --}}
+<nav class="navbar navbar-expand navbar-dark"
+style="background-color: #000000; color: #fff; margin-left: 220px; transition:
+margin-left 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+<div class="container-fluid">
+<span class="navbar-brand mb-0 h1 text-white">Dashboard Admin</span>
+<ul class="navbar-nav ms-auto align-items-center">
+{{-- Notifikasi --}}
+<li class="nav-item dropdown me-3">
+<a class="nav-link position-relative text-white" href="#"
+id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+<i class="bi bi-bell fs-5"></i>
+<span class="position-absolute top-0 start-100 translate-middle
+badge rounded-pill bg-danger">
+{{ $newTransactionsCount ?? 0 }}
+<span class="visually-hidden">unread messages</span>
+</span>
+</a>
+<ul class="dropdown-menu dropdown-menu-end" arialabelledby="notifDropdown">
+<li><a class="dropdown-item" href="{{
+route('admin.transactions.recent') }}">Transaksi baru diterima</a></li>
+<li><a class="dropdown-item" href="#">Produk habis stok</a></li>
+<li><a class="dropdown-item" href="#">Update sistem
+tersedia</a></li>
+</ul>
+</li>
+{{-- Profile & Logout --}}
+@auth
+<li class="nav-item dropdown">
+
+118 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<a class="nav-link dropdown-toggle d-flex align-items-center textwhite" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" ariaexpanded="false">
+<img src="https://cdn-icons-png.flaticon.com/512/147/147144.png"
+alt="Profile"
+class="rounded-circle me-2" style="width: 35px; height:
+35px;">
+{{ auth()->user()->name }}
+</a>
+<ul class="dropdown-menu dropdown-menu-end" arialabelledby="userDropdown">
+<li><a class="dropdown-item" href="#">Profil</a></li>
+<li><a class="dropdown-item" href="#">Pengaturan</a></li>
+<li><hr class="dropdown-divider"></li>
+<li>
+<form action="{{ route('logout') }}" method="POST">
+@csrf
+<button class="dropdown-item">Logout</button>
+</form>
+</li>
+</ul>
+</li>
+@endauth
+</ul>
+</div>
+</nav>
+{{-- STYLING KHUSUS --}}
+<style>
+.sidebar-link {
+color: #ffffff;
+transition: all 0.3s;
+display: flex;
+align-items: center;
+}
+.sidebar-link:hover {
+background-color: #b22222;
+color: #fff;
+transform: translateX(5px);
+}
+
+119 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+.sidebar-link.active {
+background-color: #8b0000;
+color: #fff;
+}
+.sidebar-link .badge {
+font-size: 0.75rem;
+margin-left: auto;
+}
+</style>
+
+120 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+19. FOLDER AUTH (LOGIN):
+Buat Folder auth pada folder resources/views/:
+
+(a). Buat file login.blade.php pada folder resources/views/:
+
+Buka file login.blade.php dan ketik program dibawah ini :
+@extends('layouts.app')
+@section('title','Login')
+@section('content')
+<div class="row justify-content-center" style="min-height: 80vh; align-items:
+center;">
+<div class="col-md-5 col-lg-4">
+<div class="card shadow-lg border-0">
+<div class="card-body p-4">
+<h3 class="card-title text-center mb-4">Login</h3>
+{{-- Alert error --}}
+@if(session('error'))
+<div class="alert alert-danger">{{ session('error') }}</div>
+
+121 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+@endif
+<form method="POST" action="{{ route('login.post') }}">
+@csrf
+<div class="mb-3 position-relative">
+<label for="email" class="form-label">Email</label>
+<input type="email" name="email" class="form-control ps-5"
+id="email" placeholder="Masukkan email" required>
+<i class="bi bi-envelope position-absolute" style="top:
+38px; left: 15px; font-size: 1.1rem;"></i>
+</div>
+<div class="mb-3 position-relative">
+<label for="password" class="form-label">Password</label>
+<input type="password" name="password" class="form-control
+ps-5" id="password" placeholder="Masukkan password" required>
+<i class="bi bi-lock position-absolute" style="top: 38px;
+left: 15px; font-size: 1.1rem;"></i>
+</div>
+<button class="btn btn-primary w-100 mb-3">Login</button>
+</form>
+<div class="text-center">
+<p class="mb-0">Belum punya akun?
+<a href="{{ route('register') }}" class="text-primary fwbold">Daftar Sekarang</a>
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+{{-- Custom style untuk ikon --}}
+<style>
+.position-relative i {
+color: #6c757d;
+pointer-events: none;
+transition: 0.2s;
+}
+
+122 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+.form-control:focus + i {
+color: #0d6efd;
+}
+</style>
+@endsection
+
+(b). Buat file register.blade.php pada folder resources/views/:
+
+Buka file register.blade.php dan ketik program dibawah ini :
+@extends('layouts.app')
+@section('title','Register')
+@section('content')
+<div class="row justify-content-center" style="min-height: 80vh; align-items:
+center;">
+<div class="col-md-5 col-lg-4">
+<div class="card shadow-lg border-0">
+<div class="card-body p-4">
+<h3 class="card-title text-center mb-4">Daftar Akun</h3>
+{{-- Alert error --}}
+@if ($errors->any())
+<div class="alert alert-danger">
+<ul class="mb-0">
+@foreach ($errors->all() as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+</div>
+@endif
+
+123 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<form method="POST" action="{{ route('register.post') }}">
+@csrf
+<div class="mb-3 position-relative">
+<label for="name" class="form-label">Nama</label>
+<input type="text" name="name" class="form-control ps-5"
+id="name" placeholder="Masukkan nama" required>
+<i class="bi bi-person position-absolute" style="top: 38px;
+left: 15px; font-size: 1.1rem;"></i>
+</div>
+<div class="mb-3 position-relative">
+<label for="email" class="form-label">Email</label>
+<input type="email" name="email" class="form-control ps-5"
+id="email" placeholder="Masukkan email" required>
+<i class="bi bi-envelope position-absolute" style="top:
+38px; left: 15px; font-size: 1.1rem;"></i>
+</div>
+<div class="mb-3 position-relative">
+<label for="password" class="form-label">Password</label>
+<input type="password" name="password" class="form-control
+ps-5" id="password" placeholder="Masukkan password" required>
+<i class="bi bi-lock position-absolute" style="top: 38px;
+left: 15px; font-size: 1.1rem;"></i>
+</div>
+<div class="mb-3 position-relative">
+<label for="password_confirmation" class="formlabel">Konfirmasi Password</label>
+<input type="password" name="password_confirmation"
+class="form-control ps-5" id="password_confirmation" placeholder="Konfirmasi
+password" required>
+<i class="bi bi-lock-fill position-absolute" style="top:
+38px; left: 15px; font-size: 1.1rem;"></i>
+</div>
+<button class="btn btn-success w-100 mb-3">Daftar</button>
+</form>
+<div class="text-center">
+<p class="mb-0">Sudah punya akun?
+
+124 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<a href="{{ route('login') }}" class="text-primary fwbold">Login di sini</a>
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+{{-- Custom style untuk ikon --}}
+<style>
+.position-relative i {
+color: #6c757d;
+pointer-events: none;
+}
+</style>
+@endsection
+
+125 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+20. FOLDER CART
+Buat Folder cart pada folder resources/views/cart:
+
+Buat file index.blade.php pada folder resources/views/cart:
+
+Buka file index.blade.php dan ketik program dibawah ini :
+@extends('layouts.app')
+@section('title','Keranjang')
+@section('styles')
+<style>
+.cart-card {
+transition: 0.3s;
+}
+.cart-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+
+126 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+}
+.cart-img {
+width: 100px;
+height: 100px;
+object-fit: cover;
+border-radius: 8px;
+}
+.cart-item-name {
+font-weight: 600;
+font-size: 1rem;
+}
+.cart-price, .cart-subtotal {
+font-weight: 700;
+color: #198754;
+}
+</style>
+@endsection
+@section('content')
+<div class="container py-4">
+<h3 class="mb-4">Keranjang Belanja</h3>
+@if(empty($cart))
+<div class="alert alert-info">Keranjang kosong.</div>
+<a href="{{ route('home') }}" class="btn btn-primary mt-3"><i class="bi biarrow-left"></i> Lanjutkan Belanja</a>
+@else
+<div class="row g-3">
+@php $total = 0; @endphp
+@foreach($cart as $item)
+<div class="col-12">
+<div class="card cart-card shadow-sm">
+<div class="card-body d-flex align-items-center">
+<img src="{{ $item['image'] ?
+asset('storage/'.$item['image']) : 'https://via.placeholder.com/100' }}"
+class="cart-img me-3" alt="{{ $item['name'] }}">
+<div class="flex-grow-1">
+<div class="cart-item-name">{{ $item['name'] }}</div>
+<div class="cart-price">Rp {{
+number_format($item['price'],0,',','.') }}</div>
+<div class="cart-subtotal">Subtotal: Rp {{
+number_format($item['subtotal'],0,',','.') }}</div>
+</div>
+<div class="d-flex flex-column align-items-end">
+
+127 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<form action="{{ route('cart.update', $item['id']) }}"
+method="POST" class="d-flex mb-2">
+@csrf
+<input type="number" name="qty" value="{{
+$item['qty'] }}" min="1" class="form-control me-2" style="width:70px;">
+<button class="btn btn-sm btnprimary">Update</button>
+</form>
+<form action="{{ route('cart.remove', $item['id']) }}"
+method="POST">
+@csrf
+<button class="btn btn-sm btn-danger">Hapus</button>
+</form>
+</div>
+</div>
+</div>
+</div>
+@php $total += $item['subtotal']; @endphp
+@endforeach
+</div>
+{{-- Total & tombol --}}
+<div class="card mt-4 shadow-sm">
+<div class="card-body d-flex justify-content-between align-items-center
+flex-wrap gap-2">
+<h4>Total: Rp {{ number_format($total,0,',','.') }}</h4>
+<div class="d-flex flex-wrap gap-2">
+<a href="{{ route('home') }}" class="btn btn-secondary"><i
+class="bi bi-arrow-left"></i> Lanjutkan Belanja</a>
+<form action="{{ route('cart.clear') }}" method="POST" class="dinline">@csrf
+<button class="btn btn-warning">Kosongkan</button>
+</form>
+<a href="{{ route('checkout.index') }}" class="btn btnsuccess">Checkout</a>
+</div>
+</div>
+</div>
+@endif
+</div>
+@endsection
+
+128 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+21. FOLDER CHECKOUT
+Buat Folder checkout pada folder resources/views/checkout:
+
+Buat file index.blade.php pada folder resources/views/checkout:
+
+Buka file index.blade.php dan ketik program dibawah ini :
+@extends('layouts.app')
+@section('title','Checkout')
+@section('content')
+<div class="row justify-content-center" style="min-height: 80vh;">
+<div class="col-md-10">
+<h3 class="mb-4 text-center">Checkout</h3>
+@if(empty($cart) || count($cart) === 0)
+<div class="alert alert-info">Keranjang Anda kosong.</div>
+
+129 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+@else
+{{-- Ringkasan Keranjang --}}
+<div class="card mb-4 shadow-sm">
+<div class="card-header bg-primary text-white">
+<i class="bi bi-cart-check"></i> Ringkasan Belanja
+</div>
+<div class="card-body p-0">
+<table class="table mb-0 align-middle">
+<thead class="table-light">
+<tr>
+<th>Produk</th>
+<th>Harga</th>
+<th>Qty</th>
+<th>Subtotal</th>
+</tr>
+</thead>
+<tbody>
+@php $total = 0; @endphp
+@foreach($cart as $item)
+@php
+$subtotal = $item['subtotal'] ?? ($item['price'] *
+$item['qty']);
+$total += $subtotal;
+@endphp
+<tr>
+<td class="d-flex align-items-center">
+@if(!empty($item['image']))
+<img src="{{
+asset('storage/'.$item['image']) }}" width="50" class="me-2 rounded">
+@endif
+<span>{{ $item['name'] }}</span>
+</td>
+<td>Rp <span class="price">{{
+number_format($item['price'],0,',','.') }}</span></td>
+<td>{{ $item['qty'] }}</td>
+<td>Rp <span class="subtotal">{{
+number_format($subtotal,0,',','.') }}</span></td>
+</tr>
+@endforeach
+<tr>
+<th colspan="3" class="text-end">Total</th>
+
+130 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<th>Rp <span id="total">{{
+number_format($total,0,',','.') }}</span></th>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+{{-- Form Checkout --}}
+<div class="card shadow-sm mb-4">
+<div class="card-header bg-success text-white">
+<i class="bi bi-credit-card"></i> Form Checkout
+</div>
+<div class="card-body">
+<form action="{{ route('checkout.process') }}" method="POST"
+id="checkoutForm">
+@csrf
+<div class="row mb-3">
+<div class="col-md-6">
+<label for="name" class="form-label">Nama
+Penerima</label>
+<input type="text" class="form-control" name="name"
+id="name" placeholder="Nama lengkap" required>
+</div>
+<div class="col-md-6">
+<label for="phone" class="form-label">No.
+Telepon</label>
+<input type="text" class="form-control" name="phone"
+id="phone" placeholder="0812xxxxxx" required>
+</div>
+</div>
+<div class="mb-3">
+<label for="address" class="form-label">Alamat
+Pengiriman</label>
+<textarea class="form-control" name="address" id="address"
+rows="3" placeholder="Alamat lengkap" required></textarea>
+</div>
+<div class="mb-3">
+<label class="form-label">Metode Pembayaran</label>
+<div class="d-flex gap-3 flex-wrap mb-2">
+
+131 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<div class="form-check">
+<input class="form-check-input payment-radio"
+type="radio" name="payment" id="cod" value="cod" required>
+<label class="form-check-label" for="cod">
+<i class="bi bi-cash-stack"></i> COD
+</label>
+</div>
+<div class="form-check">
+<input class="form-check-input payment-radio"
+type="radio" name="payment" id="bank" value="bank" required>
+<label class="form-check-label" for="bank">
+<i class="bi bi-bank"></i> Transfer Bank
+</label>
+</div>
+<div class="form-check">
+<input class="form-check-input payment-radio"
+type="radio" name="payment" id="ewallet" value="ewallet" required>
+<label class="form-check-label" for="ewallet">
+<i class="bi bi-phone"></i> E-Wallet
+</label>
+</div>
+</div>
+{{-- Pilihan Bank --}}
+<div id="bank-selection" class="mb-2" style="display:none;">
+<label for="bank_name" class="form-label">Pilih
+Bank</label>
+<select id="bank_name" class="form-select">
+<option value="" selected disabled>-- Pilih Bank -</option>
+@foreach(\App\Models\Bank::all() as $bank)
+<option value="{{ $bank->id }}" datarekening="{{ $bank->account_number }} a/n {{ $bank->account_name }}">
+{{ $bank->name }}
+</option>
+@endforeach
+</select>
+</div>
+{{-- Nomor Rekening --}}
+<div id="bank-details" class="p-3 border rounded bg-light"
+style="display:none;">
+<strong>Nomor Rekening:</strong>
+
+132 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<div id="rekening-text" class="fw-bold textprimary"></div>
+<small class="text-muted">Harap transfer sesuai nomor
+rekening dan konfirmasi setelah pembayaran.</small>
+</div>
+</div>
+<input type="hidden" name="cart_data" value="{{
+json_encode($cart) }}">
+<button type="submit" class="btn btn-primary w-100 mt-3">
+<i class="bi bi-check2-circle"></i> Proses Checkout
+</button>
+</form>
+</div>
+</div>
+@endif
+</div>
+</div>
+@endsection
+@section('scripts')
+<script>
+// Tooltip Bootstrap
+const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bstoggle="tooltip"]'))
+tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
+// Payment radio change
+const bankSelection = document.getElementById('bank-selection');
+const bankDetails = document.getElementById('bank-details');
+const rekeningText = document.getElementById('rekening-text');
+document.querySelectorAll('.payment-radio').forEach(radio => {
+radio.addEventListener('change', function(){
+if(this.value === 'bank'){
+bankSelection.style.display = 'block';
+} else {
+bankSelection.style.display = 'none';
+bankDetails.style.display = 'none';
+rekeningText.innerHTML = '';
+
+133 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+}
+});
+});
+// Pilihan bank menampilkan nomor rekening
+const bankNameSelect = document.getElementById('bank_name');
+bankNameSelect.addEventListener('change', function(){
+const selectedOption = this.selectedOptions[0];
+const rekening = selectedOption.dataset.rekening;
+if(rekening){
+rekeningText.innerHTML = rekening;
+bankDetails.style.display = 'block';
+} else {
+rekeningText.innerHTML = '';
+bankDetails.style.display = 'none';
+}
+});
+</script>
+@endsection
+
+134 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+22. FOLDER LAYOUTS
+Buat Folder layouts pada folder resources/views/layouts:
+
+Buat file app.blade.php pada folder resources/views/layouts:
+
+]
+
+Buka file app.blade.php dan ketik program dibawah ini :
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>@yield('title', 'Toko Online')</title>
+{{-- Bootstrap CSS --}}
+
+135 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrapicons.css" rel="stylesheet">
+<style>
+/* Navbar */
+.navbar-brand {
+font-weight: bold;
+color: #0d6efd !important;
+}
+/* Card hover */
+.card:hover {
+transform: translateY(-5px);
+transition: 0.3s;
+box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+/* Footer */
+footer {
+background: #f8f9fa;
+padding: 2rem 0;
+margin-top: 4rem;
+}
+/* Badge cart */
+.cart-badge {
+position: absolute;
+top: -5px;
+right: -10px;
+font-size: 0.75rem;
+}
+</style>
+@yield('styles')
+</head>
+<body>
+{{-- NAVBAR --}}
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+<div class="container">
+
+136 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<a class="navbar-brand" href="{{ route('home') }}">TokoOnline</a>
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" databs-target="#navbarContent"
+aria-controls="navbarContent" aria-expanded="false" arialabel="Toggle navigation">
+<span class="navbar-toggler-icon"></span>
+</button>
+<div class="collapse navbar-collapse" id="navbarContent">
+{{-- Kategori Dropdown --}}
+<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+@isset($categories)
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle {{ Request::is('category/*')
+? 'active' : '' }}"
+href="#" id="categoryDropdown" role="button" data-bstoggle="dropdown" aria-expanded="false">
+Kategori
+</a>
+<ul class="dropdown-menu" aria-labelledby="categoryDropdown">
+@foreach($categories as $category)
+<li>
+<a class="dropdown-item" href="{{
+route('category.show', $category->slug) }}">
+{{ $category->name }}
+</a>
+</li>
+@endforeach
+</ul>
+</li>
+@endisset
+</ul>
+{{-- Right side --}}
+<div class="d-flex align-items-center">
+{{-- Search Form --}}
+<form class="d-flex me-3" action="{{ route('home') }}" method="GET">
+<input class="form-control me-2" type="search" name="search"
+placeholder="Cari produk..." aria-label="Search">
+
+137 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<button class="btn btn-outline-primary" type="submit"><i
+class="bi bi-search"></i></button>
+</form>
+{{-- Cart --}}
+<a class="btn btn-outline-primary position-relative me-3" href="{{
+route('cart.index') }}">
+<i class="bi bi-cart3"></i> Cart
+<span class="badge bg-danger rounded-pill cart-badge">
+{{ session('cart') ? count(session('cart')) : 0 }}
+</span>
+</a>
+{{-- Login / User Dropdown --}}
+@auth
+<div class="dropdown">
+<button class="btn btn-secondary dropdown-toggle" type="button"
+data-bs-toggle="dropdown">
+{{ Auth::user()->name }}
+</button>
+<ul class="dropdown-menu dropdown-menu-end">
+@if(Auth::user()->role === 'admin')
+<li><a class="dropdown-item" href="{{
+route('admin.dashboard') }}">Dashboard Admin</a></li>
+@endif
+<li>
+<form method="POST" action="{{ route('logout') }}">
+@csrf
+<button class="dropdown-item">Logout</button>
+</form>
+</li>
+</ul>
+</div>
+@else
+<a href="{{ route('login') }}" class="btn btn-outlineprimary">Login</a>
+@endauth
+</div>
+</div>
+</div>
+</nav>
+
+138 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+{{-- MAIN CONTENT --}}
+<main class="py-4 container">
+@yield('content')
+</main>
+{{-- FOOTER --}}
+<footer class="text-center">
+<div class="container">
+<p class="mb-0">&copy; {{ date('Y') }} TokoOnline. All rights reserved.</p>
+</div>
+</footer>
+{{-- Bootstrap JS --}}
+<script
+src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"><
+/script>
+@yield('scripts')
+</body>
+</html>
+
+23. FOLDER PRODUCT
+Buat Folder product pada folder resources/views/productlayouts:
+
+139 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+Buat file show.blade.php pada folder resources/views/product:
+
+Buka file show.blade.php dan ketik program dibawah ini :
+@extends('layouts.app')
+@section('title', $product->name)
+@section('content')
+<div class="row">
+<div class="col-md-6">
+@if($product->image)
+<img src="{{ asset('storage/' . $product->image) }}" class="img-fluid"
+alt="">
+@else
+<img src="https://via.placeholder.com/600x400?text=No+Image" class="imgfluid">
+@endif
+</div>
+<div class="col-md-6">
+<h2>{{ $product->name }}</h2>
+<p class="text-muted">{{ $product->category->name }}</p>
+<h4>Rp {{ number_format($product->price, 0, ',', '.') }}</h4>
+<p>{{ $product->description }}</p>
+<p>Stok: {{ $product->stock }}</p>
+<form action="{{ route('cart.add', $product->id) }}" method="POST">
+@csrf
+<button class="btn btn-success mb-3">
+<i class="bi bi-cart-plus"></i> Tambah ke Keranjang
+</button>
+
+140 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+</form>
+<!-- Tombol Aksi -->
+<div class="d-flex gap-2">
+<!-- Tombol Lanjutkan Belanja -->
+<a href="{{ route('home') }}" class="btn btn-secondary">
+<i class="bi bi-arrow-left-circle"></i> Lanjutkan Belanja
+</a>
+<!-- Tombol Checkout / Keranjang -->
+<a href="{{ route('cart.index') }}" class="btn btn-primary">
+<i class="bi bi-bag-check"></i> Checkout
+</a>
+</div>
+</div>
+</div>
+@endsection
+
+24. PROGAM HOME
+Buat file home.blade.php pada folder resources/views/:
+
+141 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+Buka file home.blade.php dan ketik program dibawah ini :
+@extends('layouts.app')
+@section('title','Beranda')
+@section('styles')
+<style>
+/* Hero Image */
+.hero {
+position: relative;
+background: url('https://images.unsplash.com/photo-1542831371d531d36971e6?w=1600') center/cover no-repeat;
+border-radius: 15px;
+height: 380px;
+display: flex;
+align-items: center;
+justify-content: center;
+margin-bottom: 2.5rem;
+overflow: hidden;
+}
+.hero::before {
+content: "";
+position: absolute;
+inset: 0;
+background: rgba(0,0,0,0.55); /* Overlay gelap */
+}
+.hero-content {
+position: relative;
+color: #fff;
+text-align: center;
+padding: 1rem 2rem;
+}
+.hero-content h1 {
+font-size: 3rem;
+font-weight: 700;
+text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+.hero-content p {
+font-size: 1.25rem;
+opacity: 0.95;
+
+142 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+margin-bottom: 1rem;
+}
+/* Card hover */
+.product-card {
+transition: all 0.3s ease;
+border-radius: 12px;
+overflow: hidden;
+}
+.product-card:hover {
+transform: translateY(-6px);
+box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+}
+/* Stock badge */
+.stock-badge {
+position: absolute;
+top: 12px;
+right: 12px;
+font-size: 0.75rem;
+}
+/* Category badges */
+.category-badge {
+margin: 0.25rem 0.35rem 0.25rem 0;
+padding: 0.55rem 0.9rem;
+font-size: 0.85rem;
+border-radius: 20px;
+}
+/* Ribbon (Diskon/Baru) */
+.ribbon {
+width: 75px;
+height: 75px;
+overflow: hidden;
+position: absolute;
+top: -5px;
+right: -5px;
+}
+.ribbon span {
+position: absolute;
+display: block;
+width: 100px;
+
+143 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+padding: 5px 0;
+background-color: #dc3545;
+color: #fff;
+text-align: center;
+font-size: 0.75rem;
+font-weight: bold;
+transform: rotate(45deg);
+top: 19px;
+right: -21px;
+box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+}
+.card-title {
+font-weight: 600;
+font-size: 1.05rem;
+}
+.card-price {
+font-weight: 700;
+color: #198754;
+}
+</style>
+@endsection
+@section('content')
+<div class="container py-4">
+{{-- Hero Section --}}
+<div class="hero">
+<div class="hero-content">
+<h1>Selamat Datang di TokoOnline</h1>
+<p>Belanja mudah, cepat, dan harga terbaik setiap hari.</p>
+<a href="#products" class="btn btn-light btn-lg mt-2 shadow-sm">
+Lihat Produk
+</a>
+</div>
+</div>
+{{-- Kategori Section --}}
+@if($categories ?? false)
+<div class="mb-4">
+<h4 class="mb-2">Kategori Produk</h4>
+@foreach($categories as $category)
+
+144 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<a href="{{ route('home', ['category' => $category->id]) }}"
+class="badge bg-primary category-badge">
+{{ $category->name }}
+</a>
+@endforeach
+</div>
+@endif
+{{-- Produk Grid --}}
+<div id="products" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-colslg-4 g-4">
+@foreach($products as $product)
+<div class="col">
+<div class="card h-100 product-card position-relative">
+{{-- Ribbon --}}
+@if($product->is_new)
+<div class="ribbon"><span>Baru</span></div>
+@elseif($product->is_discount)
+<div class="ribbon"><span>Diskon</span></div>
+@endif
+{{-- Product Image --}}
+@if($product->image)
+<img src="{{ asset('storage/' . $product->image) }}"
+class="card-img-top"
+style="height: 200px; object-fit: cover;">
+@else
+<img src="https://via.placeholder.com/400x200?text=No+Image"
+class="card-img-top">
+@endif
+{{-- Stock Badge --}}
+@if($product->stock <= 5)
+<span class="badge bg-danger stock-badge">Stok Menipis!</span>
+@elseif($product->stock <= 20)
+<span class="badge bg-warning text-dark stock-badge">Stok: {{
+$product->stock }}</span>
+@endif
+{{-- Card Body --}}
+<div class="card-body d-flex flex-column">
+
+145 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+<h5 class="card-title">{{ $product->name }}</h5>
+<p class="card-price">Rp {{ number_format($product->price, 0,
+',', '.') }}</p>
+<a href="{{ route('product.show', $product->slug) }}"
+class="btn btn-primary mt-auto">
+<i class="bi bi-eye"></i> Lihat Produk
+</a>
+</div>
+</div>
+</div>
+@endforeach
+</div>
+{{-- Pagination --}}
+<div class="mt-5">
+{{ $products->links() }}
+</div>
+</div>
+@endsection
+
+146 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+L. KONFIGURA ROUTES
+Buka file web.php pada folder Router
+
+Edit program web.php seperti dibawah ini :
+<?php
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth; // <-- Tambahkan ini
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\BankController;
+use App\Http\Controllers\Admin\TransactionReportController;
+use App\Http\Controllers\Admin\UserController;
+/*
+|-------------------------------------------------------------------------| HALAMAN DEPAN
+|-------------------------------------------------------------------------*/
+Route::get('/', function () {
+// Gunakan Auth Facade agar VSCode tidak menampilkan notif undefined method
+if (Auth::check() && Auth::user()->role === 'admin') {
+return redirect()->route('admin.dashboard');
+
+147 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+}
+return app(ProductController::class)->home();
+})->name('home');
+/*
+|-------------------------------------------------------------------------| AUTH
+|-------------------------------------------------------------------------*/
+Route::middleware('guest')->group(function () {
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::get('/register', [AuthController::class, 'showRegister'])>name('register');
+Route::post('/register', [AuthController::class, 'register'])>name('register.post');
+});
+// Logout harus auth
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')>name('logout');
+/*
+|-------------------------------------------------------------------------| PRODUK PUBLIC
+|-------------------------------------------------------------------------*/
+Route::get('/produk/{slug}', [ProductController::class, 'show'])>name('product.show');
+/*
+|-------------------------------------------------------------------------| CART
+|-------------------------------------------------------------------------*/
+Route::prefix('cart')->group(function () {
+Route::get('/', [CartController::class, 'index'])->name('cart.index');
+Route::post('/add/{id}', [CartController::class, 'add'])->name('cart.add');
+Route::post('/update/{id}', [CartController::class, 'update'])>name('cart.update');
+
+148 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+Route::post('/remove/{id}', [CartController::class, 'remove'])>name('cart.remove');
+Route::post('/clear', [CartController::class, 'clear'])->name('cart.clear');
+});
+/*
+|-------------------------------------------------------------------------| CHECKOUT (HARUS LOGIN)
+|-------------------------------------------------------------------------*/
+Route::middleware('auth')->group(function () {
+Route::get('/checkout', [CheckoutController::class, 'index'])>name('checkout.index');
+Route::post('/checkout/process', [CheckoutController::class, 'process'])>name('checkout.process');
+});
+/*
+|-------------------------------------------------------------------------| ADMIN AREA (auth + admin middleware)
+|-------------------------------------------------------------------------*/
+Route::prefix('admin')
+->middleware(['auth', 'admin'])
+->name('admin.')
+->group(function () {
+// Dashboard Admin
+Route::get('/dashboard', [DashboardController::class, 'index'])>name('dashboard');
+// Category CRUD
+Route::resource('categories', CategoryController::class)->except(['show']);
+// Product CRUD
+Route::resource('products', ProductController::class)->except(['show']);
+// Bank CRUD
+Route::resource('banks', BankController::class)->except(['show']);
+// Laporan Transaksi Pelanggan
+Route::get('transactions', [TransactionReportController::class, 'index'])>name('transactions.index');
+
+149 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+// Transaksi Terbaru (5 transaksi terakhir)
+Route::get('transactions/recent', [TransactionReportController::class,
+'recent'])->name('transactions.recent');
+// User CRUD
+Route::resource('users', UserController::class)->except(['show']);
+});
+
+150 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+M. MIGRTION SESSIONS
+Pada terminal ketikkan dan jalan perintah dibawah ini :
+php artisan make:migration create_sessions_table
+
+Buka file sessions_tabel
+
+Edit isi File Migration sessions Table dengan kode program dibawah ini :
+
+<?php
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+return new class extends Migration
+{
+public function up(): void
+{
+Schema::create('sessions', function (Blueprint $table) {
+$table->string('id')->primary();
+$table->foreignId('user_id')->nullable()->index();
+$table->string('ip_address', 45)->nullable();
+$table->text('user_agent')->nullable();
+$table->longText('payload');
+$table->integer('last_activity')->index();
+
+151 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+});
+}
+public function down(): void
+{
+Schema::dropIfExists('sessions');
+}
+};
+
+Pada terminal ketikkan dan jalan perintah dibawah ini :
+php artisan migrate
+
+152 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+N. membuat symbolic link (tautan simbolik) dari folder
+Pada terminal ketikkan dan jalan perintah dibawah ini :
+
+php artisan storage:link
+
+O. JALANKAN PROGRAM
+Pada terminal ketikkan dan jalan perintah dibawah ini :
+php artisan serve
+
+153 | P a g e
+
+POLITEKNIK PERTANIAN
+NEGERI PAYAKUMBUH
+
+LATIHAN PEMROGRAMAN
+WEB – PRODI TRK
+
+154 | P a g e
+
+
